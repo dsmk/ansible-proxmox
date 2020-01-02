@@ -1,0 +1,23 @@
+san:
+  hosts:
+${san_hostentry}
+
+libvirt_servers:
+  hosts:
+${esxi_hostentry}
+
+proxmox_servers:
+  hosts:
+${pve_hostentry}
+  vars:
+    proxmox_master: ${pve_master}
+    proxmox_master_ip: ${pve_master_ip}
+    proxmox_test_zpools: true
+    proxmox_test_zpool_size: "20G"
+
+proxmox_master:
+  hosts:
+    ${pve_master}
+  vars:
+    proxmox_master: true
+    proxmox_name: "elves"

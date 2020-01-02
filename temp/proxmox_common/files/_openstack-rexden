@@ -1,0 +1,185 @@
+#!/bin/bash
+#
+# rexden: Collection of OpenStack servers 
+# has_check: yes
+#
+# Service asstance command to show status of any/all BU specific services running on a server.
+# Not controlled by chkconfig.  Is not intended to be run automatically at startup.
+
+#
+
+
+# Local BU init commands we should check for.
+services=""
+# If none found, run the following to see if we have at least something.
+fallbacks="buapache virtual-ip"
+# Comment label that if present inside script indicates we should include it
+comment_label="^# rexden: "
+# Directory containing the scripts we are working with
+services_dir="/etc/rc.d/init.d"
+
+RETVAL=0
+
+export PATH=/sbin:$PATH
+
+IGNORE_SERVICES=" openstack-nova-metadata-api openstack-nova-volume "
+
+# Show basic usage of this command.
+
+usage() {
+  cat <<EOF
+Usage: $0 {list|status|start|stop|restart}
+
+Shows where status on pre-defined local BU server
+
+Example: $0 start foobar
+EOF
+}
+
+# ####
+# find_all_services will find all BU services on existing system through one of three means:
+# 1) Looking for predefined services
+# 2) Looking through service directory for well-structured comments
+# 3) failing back to foundational services (buapache, virtual-ip) if nothing found
+#
+
+find_all_services () {
+  found=""
+
+  # 1) look for predefined services
+  for service in $services ; do
+    if [ -x "${services_dir}/$service" ]; then
+      found="$found $service"
+    fi
+  done
+
+  # 2) look through service directory for well-structured comment
+  #files=$(grep -l "$comment_label" $services_dir/* )
+  files=$(ls $services_dir/openstack-* $services_dir/quantum-*)
+  for file in $files ; do
+    if [ -x "$file" ]; then
+      service=$(basename "$file" )
+      if echo "$IGNORE_SERVICES" | grep -q " $service " ; then
+        #echo "skipping $service"
+        /bin/true
+      else
+        found="$found $service"
+      fi
+    fi
+  done
+
+  # 3) fall back to foundational services if nothing found
+  if [ -z "$found" ]; then
+    for fallback in $fallbacks ; do
+      if [ -x "${services_dir}/$fallback" ]; then
+        found="$found $fallback"
+      fi
+    done
+  fi
+  found_services="$found"
+}
+
+for_each_service () {
+  for service in $found_services ; do
+    if [ -x "${services_dir}/$service" ]; then
+      $1 "$service"
+    fi
+  done
+}
+
+check_service () {
+  file="${services_dir}/$1"
+  tmpfile="/tmp/check-$1.$$"
+  $file status >${tmpfile} 2>&1
+  ret=$!
+  if grep -q "is running" "$tmpfile" ; then
+    #echo "is running"
+    /bin/true
+  else
+    #echo "$1 : rc=$ret"
+    #echo "is not running"
+    cat "$tmpfile"
+  fi
+  #cat "$tmpfile"
+  rm "$tmpfile"
+}
+ 
+describe_service () {
+  file="${services_dir}/$1"
+  if [ -r "$file" ]; then
+    description=$(grep '^# description: ' "$file" | sed 's/^# description: //' )
+  else
+    description=
+  fi
+  echo "$1: $description"
+}
+
+run_service () {
+  file="${services_dir}/$1"
+  if [ -x $file ]; then
+    echo ""
+    echo "$file $cmd"
+    $file $cmd
+    current_retval=$?
+    if [ $current_retval -gt $RETVAL ]; then
+      RETVAL=$current_retval
+    fi
+  fi
+}
+
+cmd=$1
+shift
+find_all_services
+
+case "$cmd" in
+  list)
+    for_each_service describe_service
+    ;;
+  status)
+    for_each_service run_service
+    ;;
+  check)
+    for_each_service check_service
+    ;;
+  start|stop|restart)
+    for_each_service run_service
+    ;;
+  *)
+    usage
+    exit 1
+esac
+exit $RETVAL
+
+    for init in $found_services ; do
+      if [ -x "${svcdir}/$init" ]; then
+
+found=""
+
+# Iterate our known servers running status on each.
+for service in $services; do
+    if [ -x /etc/init.d/$service ]; then
+	found=1
+	echo "/etc/init.d/$service $cmd"
+	/etc/init.d/$service $cmd
+	foo=$?
+	if [ $foo -gt $RETVAL ]; then
+	    RETVAL=$foo
+	fi
+    fi
+done
+
+# No known services found?  Try some fallback general services.
+if [ ! $found ]; then
+    for fallback in $fallbacks; do
+	if [ -x /etc/init.d/$fallback ]; then
+	    /etc/init.d/$fallback $cmd
+	    foo=$?
+	    if [ $foo -gt $RETVAL ]; then
+		RETVAL=$foo
+	    fi
+	    break
+	fi
+    done
+fi
+
+exit $RETVAL

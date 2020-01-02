@@ -1,0 +1,12 @@
+allow-{{ item.switch }} {{ item.port }}
+iface {{ item.port }} inet manual
+  ovs_bridge {{ item.switch }}
+{% if item.bonds is defined %}
+  ovs_type OVSBond
+  ovs_bonds {{ item.bonds }}
+{% else %}
+  ovs_type OVSPort
+{% endif %}
+{%- if item.options is defined %}
+  ovs_options {{ item.options }}
+{%- endif %}

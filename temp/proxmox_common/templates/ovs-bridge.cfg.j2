@@ -1,0 +1,8 @@
+auto {{ item }}
+allow-ovs {{ item }}
+iface {{ item }} inet manual
+  ovs_type OVSBridge
+  ovs_ports {{ proxmox_switch2port[item] }} {%- for vlan in proxmox_vlan_switches %}
+{% if vlan.parent == item %} {{ vlan.name }}{%-endif %}
+{% endfor %}
+

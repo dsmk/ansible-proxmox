@@ -1,0 +1,33 @@
+auto lo
+iface lo inet loopback
+
+{% for dev in proxmox_network_list %}
+{% if 'bridge' in dev %}
+iface {{ dev.device }} inet manual
+
+auto {{ dev.bridge }} 
+iface {{ dev.bridge }} inet static
+  address {{ dev.address }}
+  netmask {{ dev.netmask }}
+{% if 'gateway' in dev %}
+  gateway {{ dev.gateway }}
+{% endif %}
+  bridge_ports {{ dev.device }}
+  bridge_stp off
+  bridge_fd 0
+
+{% elif 'address' in dev %}
+auto {{ dev.device }}
+iface {{ dev.device }} inet static
+  address {{ dev.address }}
+  netmask {{ dev.netmask }}
+{% if 'gateway' in dev %}
+  gateway {{ dev.gateway }}
+{% endif %}
+
+{% else %}
+iface {{ dev.device }} inet manual
+
+{% endif %}
+{% endfor %}
+source /etc/network/interfaces.d/*.cfg

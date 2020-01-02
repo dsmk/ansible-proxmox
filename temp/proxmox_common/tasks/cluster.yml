@@ -1,0 +1,102 @@
+---
+
+    - name: block of things that we need to do only on the master
+      when: inventory_hostname == proxmox_master
+      block:
+
+        - name: "master: check if the cluster has been created"
+          tags: master
+          register: cluster_status
+          check_mode: no
+          failed_when: cluster_status.rc > 2
+          changed_when: cluster_status.rc > 0 and cluster_status.rc < 3
+          command: "/usr/bin/pvecm nodes"
+
+        - name: "master: debug cluster_status"
+          tags: master
+          debug:
+            msg: "status {{ cluster_status.rc }}"
+
+        - name: "master: create cluster if it does not already exist"
+          tags: master
+          when: cluster_status.rc > 0
+          command: "/usr/bin/pvecm create {{ proxmox_name }} --link0 {{ ansible_ssh_host }}"
+
+        - name: "master: ensure that we have generated a random root password"
+          tags:
+            - root_pw
+            - master
+          command: openssl rand -hex -out "/root/.proxmox_root_pw" 20 creates="/root/.proxmox_root_pw"
+
+        - name: "master: load the root password for future use"
+          tags:
+            - root_pw
+            - master
+          command: /bin/cat "/root/.proxmox_root_pw"
+          check_mode: no
+          changed_when: False
+          register: proxmox_root_pw
+
+        - name: "master: Ensure that the root password has been set"
+          tags:
+            - root_pw
+            - master
+          user:
+            name: root
+            password: "{{ proxmox_root_pw.stdout |password_hash('sha256','secretsalt') }}"
+
+        - name: "master: debug root password"
+          tags: proxmox_nodes
+          debug:
+            msg: "status {{ proxmox_root_pw.stdout }}"
+
+    - name: once we have confirmed that the master is done then we need to do the other nodes
+      when: inventory_hostname != proxmox_master
+      block:
+
+        - name: "node: Get the root password from the master node"
+          delegate_to: "{{ proxmox_master }}"
+          tags:
+            - root_pw
+            - proxmox_nodes
+          command: /bin/cat "/root/.proxmox_root_pw"
+          check_mode: no
+          changed_when: False
+          register: proxmox_root_pw
+
+        - name: "node: Ensure that the root password has been set"
+          tags:
+            - root_pw
+            - master
+          user:
+            name: root
+            password: "{{ proxmox_root_pw.stdout |password_hash('sha256','secretsalt') }}"
+
+        - name: "node: check if it has already joined a cluster"
+          tags: proxmox_nodes
+          register: cluster_status
+          check_mode: no
+          failed_when: cluster_status.rc > 2
+          changed_when: cluster_status.rc > 0 and cluster_status.rc < 3
+          command: "/usr/bin/pvecm nodes"
+
+        - name: "node: debug cluster_status"
+          tags: proxmox_nodes
+          debug:
+            msg: "status {{ cluster_status.rc }}"
+
+        - name: "node: ensure that we have the correct variables in the cluster join script"
+          tags:
+            - root_pw
+            - proxmox_nodes
+          template:
+            src: 'node_pw.input.j2'
+            dest: '/root/node_pw.input'
+          vars:
+            root_pw: "{{ proxmox_root_pw.stdout }}"
+
+        - name: "node: join cluster if not already listed"
+          throttle: 1
+          tags: proxmox_nodes
+          when: cluster_status.rc > 0
+          shell: "cat /root/node_pw.input | /usr/bin/pvecm add {{ proxmox_master_ip }} --link0 {{ ansible_ssh_host }} 2>&1 | tee /var/log/pvecm_join.log"

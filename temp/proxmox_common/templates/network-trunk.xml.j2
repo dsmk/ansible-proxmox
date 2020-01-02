@@ -1,0 +1,24 @@
+<network>
+  <name>{{ item }}</name>
+  <forward mode="bridge" />
+  <bridge name='{{ item }}' />
+  <virtualport type='openvswitch' />
+  <portgroup name='vlan-all' default='yes'>
+    <vlan trunk='yes'>
+{% for vlan in libvirt_vlan_switches %}
+{% if vlan['parent'] == item %}
+      <tag id='{{ vlan['vlan'] }}' />
+{% endif %}
+{% endfor %}
+    </vlan>
+  </portgroup>
+{% for vlan in libvirt_vlan_switches %}
+{% if vlan['parent'] == item %}
+  <portgroup name='vlan-{{ vlan['name'] }}'>
+    <vlan>
+      <tag id='{{ vlan['vlan'] }}' />
+    </vlan>
+  </portgroup>
+{% endif %}
+{% endfor %}
+</network>

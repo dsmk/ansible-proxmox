@@ -1,0 +1,196 @@
+#!/bin/bash
+
+
+#
+
+
+# Local BU init commands we should check for.
+services="bucas buworks kuali degree-audit spss-license-server twitter cyrus Mathlm matlablm maplelm"
+# If none found, run the following to see if we have at least something.
+fallbacks="buapache virtual-ip"
+# directory which contains symlinks to "bu" services
+sysconfig_dir="/etc/sysconfig/bu-services.d"
+# Directory containing the scripts we are working with
+services_dir="/etc/rc.d/init.d"
+
+RETVAL=0
+
+export PATH=/sbin:$PATH
+
+
+# Show basic usage of this command.
+
+usage() {
+  cat <<EOF
+Usage: $0 {list|status|full_status|start|stop|restart}
+
+Examples: 
+
+Short status on all bu service:
+service bu status
+
+Full status output on all bu services:
+service bu full_status
+
+Restart all bu services:
+service bu restart
+
+Service asstance command to show status of any/all BU specific services running on a server.
+Not controlled by chkconfig.  Is not intended to be run automatically at startup, but rather
+to help with service management.
+
+The script determines what are "BU" services by symlinks in the /etc/sysconfig/bu-services.d
+directory with the .service extension.  This makes it easy for RPMs to drop symlinks and/or scripts into the directory.
+The .service extension is used so we do not accidently try to manage any bkupfiles.
+
+It also looks for a list of predefined services in addition to the directory:
+$services
+
+Lastly, if it finds none of the pre-defined services or any bu-services.d symlinks it will look for
+the following fallback services to check:
+$fallbacks
+EOF
+}
+
+# ####
+# find_all_services will find all BU services on existing system through one of three means:
+# 1) Looking for predefined services
+# 2) Looking through service directory for items
+# 3) failing back to foundational services (buapache, virtual-ip) if nothing found
+#
+
+find_all_services () {
+  found=""
+
+  # 1) look for predefined services
+  for service in $services ; do
+    if [ -x "${services_dir}/$service" ]; then
+      found="$found $service"
+    fi
+  done
+
+  # 2) look through services dir for symlinks to other services
+  for file in ${sysconfig_dir}/*.service ; do
+    if [ -x "$file" ]; then
+      temp=$(basename "$file" )
+      service=$(basename "$temp" .service )
+      found="$found $service"
+    fi
+  done
+
+  # 3) fall back to foundational services if nothing found
+  if [ -z "$found" ]; then
+    for fallback in $fallbacks ; do
+      if [ -x "${services_dir}/$fallback" ]; then
+        found="$found $fallback"
+      fi
+    done
+  fi
+  found_services="$found"
+}
+
+for_each_service () {
+  for service in $found_services ; do
+    if [ -x "${sysconfig_dir}/${service}.service" ]; then
+      $1 "$service" "${sysconfig_dir}/${service}.service"
+    elif [ -x "${services_dir}/$service" ]; then
+      $1 "$service" "${services_dir}/$service"
+    fi
+  done
+}
+
+check_service () {
+  file="$2"
+  if grep -q "^# has_check: yes" "${file}" ; then
+    # use the scripts check routine
+    "$file" check
+  else
+    # use the default check
+    default_check_service "$1" "$2"
+  fi
+}
+
+default_check_service () {
+  file="$2"
+  tmpfile="/tmp/check-$1.$$"
+  $file status >${tmpfile} 2>&1
+  ret=$!
+  if grep -q "is running" "$tmpfile" ; then
+    #echo "is running"
+    /bin/true
+  else
+    #echo "$1 : rc=$ret"
+    #echo "is not running"
+    cat "$tmpfile"
+  fi
+  #cat "$tmpfile"
+  rm "$tmpfile"
+}
+ 
+describe_service () {
+  file="$2"
+  if [ -r "$file" ]; then
+    description=$(grep '^# description: ' "$file" | sed 's/^# description: //' )
+  else
+    description=
+  fi
+  echo "$1: $description"
+}
+
+status_service () {
+  file="$2"
+  if [ -x $file ]; then
+    #echo ""
+    #echo "$file $cmd"
+    output=$( $file $cmd 2>&1 )
+    current_retval=$?
+    if [ $current_retval -gt 0 ]; then
+      echo "$1: DOWN ($output)"
+    else
+      echo "$1: OK"
+    fi
+    if [ $current_retval -gt $RETVAL ]; then
+      RETVAL=$current_retval
+    fi
+  fi
+}
+
+run_service () {
+  file="$2"
+  if [ -x $file ]; then
+    echo ""
+    echo "$file $cmd"
+    $file $cmd
+    current_retval=$?
+    if [ $current_retval -gt $RETVAL ]; then
+      RETVAL=$current_retval
+    fi
+  fi
+}
+
+cmd=$1
+shift
+find_all_services
+
+case "$cmd" in
+  list)
+    for_each_service describe_service
+    ;;
+  status)
+    for_each_service status_service
+    ;;
+  full_status)
+    cmd=status
+    for_each_service run_service
+    ;;
+  check)
+    for_each_service check_service
+    ;;
+  start|stop|restart)
+    for_each_service run_service
+    ;;
+  *)
+    usage
+    exit 1
+esac
+exit $RETVAL

@@ -1,0 +1,72 @@
+---
+# If true then we configure openvswitch
+#
+proxmox_openvswitch: false
+
+# If true then we will overwrite the /etc/network/interfaces
+proxmox_enable_net: false
+
+# If true then we create the test zpools
+#
+proxmox_test_zpools: false
+
+# Default size to use for the test zpools
+#
+proxmox_test_zpool_size: "1G"
+
+# RPM to load the 
+# havana
+#rdo_repo_rpm: "http://rdo.fedorapeople.org/openstack-havana/rdo-release-havana.rpm"
+# icehouse
+rdo_repo_rpm: "http://rdo.fedorapeople.org/openstack-icehouse/rdo-release-icehouse.rpm"
+
+# Directory where we store the passwords
+ostack_pw_dir: "/root/.openstack_pws"
+
+# Default Region
+os_region: "Rexden"
+
+proxmox_isos: 
+  - name: 'CentOS-7-x86_64-Minimal-1908.iso'
+    url: 'http://mirror.rackspace.com/CentOS/7/isos/x86_64/CentOS-7-x86_64-Minimal-1908.iso'
+#  - name: 'virtio-win.iso'
+#    url: 'https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso'
+#  - name: 'windows-server-2016-standard-x64-eval.iso'
+#    url: 'https://software-download.microsoft.com/download/pr/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO'
+#    checksum: '1ce702a578a3cb1ac3d14873980838590f06d5b7101c5daaccbac9d73f1fb50f'
+#  - name: 'Windows-10-enterprise-x64-eval.iso'
+#    url: "https://software-download.microsoft.com/download/pr/18362.30.190401-1528.19h1_release_svc_refresh_CLIENTENTERPRISEEVAL_OEMRET_x64FRE_en-us.iso"
+#    checksum: "ab4862ba7d1644c27f27516d24cb21e6b39234eb3301e5f1fb365a78b22f79b3"
+#  - name: 'windows-server-2019-standard-x64-eval.iso'
+#    checksum: "221f9acbc727297a56674a0f1722b8ac7b6e840b4e1ffbdd538a9ed0da823562"
+#    url: "https://software-download.microsoft.com/download/sg/17763.379.190312-0539.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso"
+#    https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1907.qcow2c
+                
+proxmox_templates:
+  - "alpine-3.10-default_20190626_amd64.tar.xz"
+#  - "centos-7-default_20190926_amd64.tar.xz"
+#  - "centos-8-default_20191016_amd64.tar.xz"
+#  - "ubuntu-18.04-standard_18.04.1-1_amd64.tar.gz"
+#  - "debian-9-turnkey-ansible_15.1-1_amd64.tar.gz"
+#  - "debian-9-turnkey-domain-controller_15.0-1_amd64.tar.gz"
+#  - "debian-9-turnkey-gitlab_15.5-1_amd64.tar.gz"
+#  - "debian-9-turnkey-observium_15.1-1_amd64.tar.gz"
+    #  - "debian-10.0-standard_10.0-1_amd64.tar.gz"
+    #- "opensuse-15.1-default_20190719_amd64.tar.xz"
+    #- "debian-9-turnkey-codeigniter_15.1-1_amd64.tar.gz"
+    #- "debian-9-turnkey-collabtive_15.2-1_amd64.tar.gz"
+    #- "debian-9-turnkey-concrete5_15.1-1_amd64.tar.gz"
+    #- "debian-9-turnkey-core_15.0-1_amd64.tar.gz"
+    #- "debian-9-turnkey-ghost_15.3-1_amd64.tar.gz"
+    #- "debian-9-turnkey-gitea_15.2-1_amd64.tar.gz"
+    #- "debian-9-turnkey-nextcloud_15.2-1_amd64.tar.gz"
+    #- "debian-9-turnkey-observium_15.1-1_amd64.tar.gz"
+    #- "debian-9-turnkey-mysql_15.1-1_amd64.tar.gz"
+    #- "debian-9-turnkey-nextcloud_15.2-1_amd64.tar.gz"
+    #- "debian-9-turnkey-openvpn_15.1-1_amd64.tar.gz"
+    #- "debian-9-turnkey-owncloud_15.2-1_amd64.tar.gz"
+    #- "debian-9-turnkey-revision-control_15.0-1_amd64.tar.gz"
+    #- "debian-9-turnkey-syncthing_15.1-1_amd64.tar.gz"
+    #- "debian-9-turnkey-tracks_15.1-1_amd64.tar.gz"
+
+# vi: ts=2 expandtab ft=yaml

@@ -1,0 +1,40 @@
+---
+- name: apt repository files
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/apt/sources.list.d/{{ item }}"
+    owner: root
+    group: root
+    mode: 0444
+  with_items:
+    - 'pve-enterprise.list'
+    - 'pve-no-subscription.list'
+
+- name: Core packages
+  apt: 
+    name: 
+    - sysstat
+    - vim
+
+- name: Add dsmk key to authorized keys
+  tags:
+    - sshd
+  authorized_key:
+    user: root 
+    key: "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEApdbMW3LOEHvxMC7QmEHTeB1CWhVfaQOQmP8AZshHvJXE6izLaltQ8JtgK06YVB4xL/s5p7sv0iTWwNnyQtfFErqbIUxAprW4hnxTOa9HofHObE/11YyfxFGP8JyxbBtC3v3lJONzrcUpf8dQsqMWASEqJMwDGPX8zJbQ/jWic6M= /home/dsmk/.ssh/id_rsa"
+
+- name: Ensure we that we are doing nested virtualization
+  copy:
+    src: "kvm-intel.conf"
+    dest: "/etc/modprobe.d/kvm-intel.conf"
+    owner: root
+    group: root
+    mode: 0444
+    
+#- name: NFS Kernel for ZFS export
+#  apt: name="nfs-kernel-server"
+
+#- name: Ensure that the NFS kernel server has started
+#  service: name="nfs-kernel-server" state=started enabled=yes
+
+# vi: ts=2 expandtab ft=yaml

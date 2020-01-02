@@ -1,0 +1,31 @@
+---
+# tasks file to download various isos
+#
+
+- name: Ensure we have pip
+  apt:
+    name: "python-pip"
+
+- name: Ensure we have the client library
+  pip:
+    name: "proxmoxer"
+
+#- name: Make certain lxc domains are present
+#  tags:
+#    - lxc
+#  proxmox:
+#    vmid: "{{ item.id }}"
+#    node: "{{ ansible_hostname }}"
+#    hostname: "{{ item.name }}"
+#    ostemplate: "{{ item.template }}"
+#    ip_address: "{{ item.ipaddr }}"
+#    onboot: true
+#    api_host: localhost
+#    api_user: 'root@pam'
+#  with_items:
+#    - name: "fluffy3.rexden.us" 
+#      id: 8026
+#      ipaddr: "192.168.8.26"
+#      template: "debian-8-turnkey-domain-controller_14.1-1_amd64.tar.gz"
+
+# vi: ts=2 expandtab ft=yaml

@@ -1,0 +1,17 @@
+---
+
+- name: restart networking
+  service: name=networking state=restarted
+
+- name: restart smbd
+  service: name=smbd state=restarted
+
+- name: restart nfs-config
+  service: name=nfs-config state=restarted
+
+- name: restart nfs-kernel-server
+  service: name=nfs-kernel-server state=restarted
+
+- name: redo all zfs shares
+  command: /sbin/zfs share -a
+

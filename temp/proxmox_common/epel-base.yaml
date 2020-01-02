@@ -1,0 +1,36 @@
+# These tasks relate to doing the initial configuration
+# and setup
+# non-BULinux systems are appropriately configured
+#
+# We do the following:
+# 1) Update syslog to send all data to buckbeak
+# 2) Update the /root/.ssh/authorized_keys2 to have backup and management keys
+# 3) 
+---
+    - name: install rexden service agregator
+      tags:
+        - core
+        - doitnow
+      copy: src="files/$item" dest="/etc/init.d/$item" owner=root group=root mode=0755
+      with_items:
+        - '_openstack-rexden'
+        - rexden
+
+    - name: install the core rpms
+      yum: name="$item" state=present
+      with_items:
+        - openstack-utils 
+#        - qpid-cpp-server 
+        - avahi
+      tags:
+        - core
+
+    - name: rpms necessary for seboolean commands
+      tags:
+        - horizon
+        - selinux
+      yum: name="$item" state=present
+      with_items:
+        - "libselinux-python"
+        - "libsemanage-python"
+    

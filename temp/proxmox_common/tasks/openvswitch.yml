@@ -1,0 +1,173 @@
+---
+
+  - name: Ensure that the openvswitch dpkg have been installed
+    tags:
+      - openvswitch_packages
+      - packages
+    apt: 
+      name: "{{ item }}"
+    with_items:
+      - "openvswitch-switch"
+      - "ethtool"
+      - "python-openvswitch"
+
+  - name: Make certain that the /etc/network/interfaces file is up to date
+    tags:
+      - now
+    when: proxmox_enable_net
+    #notify:
+    #  - restart networking
+    template:
+      src: 'interfaces.j2'
+      dest: '/etc/network/interfaces'
+      owner: root
+      group: root
+      mode: 0644
+      
+#  - name: Ubuntu 16.04 has a bug bringing up OpenVSwitch network elements on reboot
+#    tags:
+#      - now
+#    when: ansible_distribution_version == "16.04"
+#    copy:
+#      src: 'openvswitch-nonetwork.service'
+#      dest: '/lib/systemd/system/openvswitch-nonetwork.service'
+#      owner: root
+#      group: root
+#      mode: 0644
+
+#  - name: Make certain that the main interfaces file loads the .d directory
+#    tags:
+#      - now
+#    notify:
+#      - restart networking
+#    lineinfile:
+#      dest: "/etc/network/interfaces"
+#      line: "source /etc/network/interfaces.d/*.cfg"
+#      regexp: "^source /etc/network/interfaces.d/..cfg$"
+
+#  - name: Make certain that the main bridges are done
+#    tags:
+#      - now
+#    when: item != None
+#    with_items: '{{ proxmox_switches }}'
+#    notify:
+#      - restart networking
+#    template:
+#      src: 'ovs-bridge.cfg.j2'
+#      dest: '/etc/network/interfaces.d/bridge-{{ item }}.cfg'
+#      owner: root
+#      group: root
+#      mode: 0644
+      
+  #- name: Make certain we have the main bridge
+  #  when: item != None
+  #  openvswitch_bridge:
+  #    bridge: "{{ item }}"
+  #    state: present
+  #  with_items: "{{ proxmox_switches }}"
+
+  #  - name: Make certain that the ports are done
+  #  tags:
+  #    - now
+  #  when: item != None
+  #  with_items: '{{ proxmox_ports }}'
+  #  notify:
+  #    - restart networking
+  #  template:
+  #    src: 'ovs-port.cfg.j2'
+  #    dest: '/etc/network/interfaces.d/port-{{ item.port }}.cfg'
+  #    owner: root
+  #    group: root
+  #    mode: 0644
+      
+  #- name: Test item
+  #  when: proxmox_ports
+  #  openvswitch_port: 
+  #    bridge: "{{ item.switch }}"
+  #    port: "{{ item.port }}"
+  #  with_items: "{{ proxmox_ports }}"
+
+  #- name: Make certain that the vlans are done
+  #  tags:
+  #    - now
+  #  when: item != None
+  #  with_items: '{{ proxmox_vlan_switches }}'
+  #  notify:
+  #    - restart networking
+  #  template:
+  #    src: 'ovs-vlan.cfg.j2'
+  #    dest: '/etc/network/interfaces.d/vlan-{{ item.name }}.cfg'
+  #    owner: root
+  #    group: root
+  #    mode: 0644
+      
+  #- name: Make certain we have the vlan bridges
+  #  openvswitch_bridge_vlan:
+  #    bridge: "{{ item.name }}"
+  #    vlan: "{{ item.vlan }}"
+  #    parent: "{{ item.parent }}"
+  #    state: present
+  #  with_items: "{{ proxmox_vlan_switches }}"
+
+  #- name: test template file
+  #  connection: local
+  #  template:
+  #    src: 'network-trunk.xml.j2'
+  #    dest: '/tmp/network-{{ proxmox_switches }}.xml'
+  #  with_items: "{{ proxmox_switches }}"
+
+  #  - name: Ensure that the openvswitch main trunk networks are defined
+  #  virt_net:
+  #    name: "{{ item }}"
+  #    xml: '{{ lookup("template", "network-trunk.xml.j2") }}'
+  #    command: "define"
+  #  with_items: "{{ proxmox_switches }}"
+
+  #- name: Ensure that the openvswitch trunk networks are active
+  #  virt_net:
+  #    name: "{{ item }}"
+  #    state: active
+  #  with_items: "{{ proxmox_switches }}"
+
+  #- name: Ensure that the openvswitch trunk networks are set to autostart
+  #  virt_net:
+  #    name: "{{ item }}"
+  #    autostart: "yes"
+  #  with_items: "{{ proxmox_switches }}"
+
+  #- name: Ensure that the openvswitch vlan networks are defined
+  #  virt_net:
+  #    name: "{{ item.name }}"
+  #    xml: '{{ lookup("template", "network.xml.j2") }}'
+  #    command: "define"
+  #  with_items: "{{ proxmox_vlan_switches }}"
+
+  #- name: Ensure that the openvswitch vlan networks are active
+  #  virt_net:
+  #    name: "{{ item.name }}"
+  #    state: active
+  #  with_items: "{{ proxmox_vlan_switches }}"
+
+  #- name: Ensure that the openvswitch vlan networks are set to autostart
+  #  virt_net:
+  #    name: "{{ item.name }}"
+  #    autostart: "yes"
+  #  with_items: "{{ proxmoproxmoxches }}"
+
+  #- name: Check to see what bridges exist
+  #  always_run: yes
+  #  ignore_errors: yes
+  #  register: "bridge_list"
+  #  command: /usr/bin/ovs-vsctl list-br
+  #
+  #- debug: msg= "{{ bridge_list }}"
+
+  #- name: Make certain that the vlan fake bridges exist
+  #  when: bridge_list.has_key('stdout') and bridge_list.stdout.contains("{{ item.name }}") == -1
+  #  command: /usr/bin/ovs-vsctl add-br "{{ item.name }}" "{{ item.vlan }}" vm0
+  #  with_items:
+  #    - { name: "main", vlan: 1 }
+  #    - { name: "test", vlan: 4 }
+
+
+# vi:ts=2 ft=yaml

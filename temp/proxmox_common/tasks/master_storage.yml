@@ -1,0 +1,15 @@
+---
+
+  - name: Does storage pool already exist
+    command: "pvesm list {{ storage_name }}"
+    check_mode: no
+    failed_when: storage_check.rc > 2000
+    register: storage_check
+
+  - name: Debug
+    debug:
+      var: storage_check
+      
+  - name: Add storage if it does not already exist
+    when: "storage_check.rc > 0"
+    command: "pvesm add '{{ storage_type }}' '{{ storage_name }}' {{ storage_options }}"

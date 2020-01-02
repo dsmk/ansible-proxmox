@@ -1,0 +1,109 @@
+- hosts: proxmox_servers
+  become: true
+
+         
+  tasks:
+#    - name: ensure that all packages are up to date
+#      tags: 
+#        - pre
+#        - patches
+#      apt:
+#        name: "*"
+#        update_cache: yes
+#        state: latest
+
+    - name: ensure that the hostname is set correctly
+      tags: pre
+      hostname:
+        name: "{{inventory_hostname}}"
+
+    - name: ensure that the /etc/hosts does not have a 127.0.0.1 entry
+      tags: pre
+      lineinfile:
+        state: absent
+        path: "/etc/hosts"
+        regexp: '^127\.0\.0\.1\s+localhost'
+        
+    - name: ensure that we have an entry in /etc/hosts (replacing 127.0.0.1)
+      tags: pre
+      lineinfile:
+        state: present
+        path: "/etc/hosts"
+        line: "{{ansible_default_ipv4.address}} {{inventory_hostname}} localhost {{inventory_hostname}}.rexden.us"
+        regexp: "^{{ansible_ssh_host}} "
+
+    - name: ensure that we have the Proxmox repository key
+      tags: pre
+      apt_key: 
+        url:  "http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg"
+        state: present
+
+    - name: ensure that we have the Proxmox repository
+      tags: pre
+      apt_repository: 
+        repo: "deb http://download.proxmox.com/debian/pve buster pve-no-subscription"
+        state: present
+
+    - name: ensure that the pve-enterprise apt repo does not exist
+      tags: pre
+      file:
+        path: "/etc/apt/sources.list.d/pve-enterprise.list"
+        state: absent
+
+    - name: ensure pve packages have been installed
+      register: pkgs_installed
+      apt: 
+        update_cache: yes
+        name:
+          - proxmox-ve
+          - postfix
+          - open-iscsi
+
+    - name: recheck that the pve-enterprise apt repo does not exist
+      tags: pre
+      file:
+        path: "/etc/apt/sources.list.d/pve-enterprise.list"
+        state: absent
+
+    - name: ensure that it has rebooted after installing the packages
+      when: pkgs_installed.changed
+      register: rebooted
+      reboot:
+        reboot_timeout: 600
+
+    - name: import the actual Proxmox configuration
+      tags:
+        - proxmox
+        - proxmox_common
+      import_role:
+        name: "~/ansible/roles/proxmox_common"
+        #name: "/home/dsmk/ansible/roles/proxmox_common"
+
+      
+#    - name: debug reboot
+#      debug:
+#        msg: "Took {{rebooted.elapsed}} seconds"
+        
+# - hosts: proxmox_nodes
+#   become: true
+
+#   tasks:
+#     - name: get the ssh key from the node
+#       tags: node
+#       register: node_ssh_key
+#       check_mode: no
+#       command: "cat /root/.ssh/id_rsa.pub"
+
+#     - name: ensure that the master has the ssh key
+#       tags: node
+#       delegate_to: proxmox_master
+#       debug: 
+#         var: node_ssh_key
+
+#     - name: ensure that the master has the ssh key
+#       tags: node
+#       delegate_to: localhost
+#       lineinfile:
+#         state: present
+#         path: /tmp/ssh/authorized_keys
+#         line: node_ssh_key.stdout_lines[0] 

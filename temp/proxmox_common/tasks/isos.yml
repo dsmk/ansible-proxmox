@@ -1,0 +1,28 @@
+---
+# tasks file to download various isos
+#
+
+- name: Ensure that we have downloaded the various isos
+  tags: 
+    - isos
+  get_url:
+    url: "{{ item.url }}"
+    dest: "/var/lib/vz/template/iso/{{ item.name }}"
+    mode: 0444
+  with_items: "{{ proxmox_isos }}"
+
+- name: Save output of local template list
+  tags:
+    - templates
+  command: pveam list local
+  check_mode: no
+  register: template_list
+
+- name: Add templates if not already present
+  tags:
+    - templates
+  when: "not (item in template_list.stdout)"
+  command: "pveam download local {{ item }}"
+  with_items: "{{ proxmox_templates }}"
+
+# vi: ts=2 expandtab ft=yaml

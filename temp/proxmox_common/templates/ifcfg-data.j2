@@ -1,0 +1,13 @@
+# Just make the interface promisc and up.  No ip address is necessary 
+# since this is a different interface from what the system uses.
+#
+DEVICE="{{ data_network_interface }}"
+NM_CONTROLLED="no"
+{% if data_ip_addr is defined %}
+BOOTPROTO="static"
+IPADDR="{{ data_ip_addr }}"
+{% else %}
+PROMISC=yes
+BOOTPROTO="none"
+{% endif %}
+ONBOOT="yes"

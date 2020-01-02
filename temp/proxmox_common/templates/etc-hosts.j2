@@ -1,0 +1,10 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+{{ip_addr}} {{inventory_hostname}} {{inventory_hostname_short}}
+
+# Other OpenStack hostnames
+{% for host in groups['openstack-all-servers'] %}
+{% if host != inventory_hostname %}
+{{hostvars[host]['ip_addr']}} {{host}} {{host | replace('.' + ansible_domain,'') }}
+{% endif %}
+{% endfor %}

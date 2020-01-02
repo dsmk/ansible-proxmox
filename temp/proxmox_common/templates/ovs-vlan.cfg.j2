@@ -1,0 +1,4 @@
+allow-{{ item.parent }} {{ item.name }}
+iface {{ item.name }} inet manual
+  ovs_type OVSBridge
+  ovs_options {{ item.parent }} {{ item.vlan }}

@@ -1,0 +1,2 @@
+# Disabled for the no-subscription version
+#deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise

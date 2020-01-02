@@ -1,0 +1,9 @@
+---
+
+- include_tasks: master_storage.yml
+  tags: master_storage
+  vars:
+    storage_type: "zfspool"
+    storage_name: "{{ item }}"
+    storage_options: "--pool {{ item }} --content images,rootdir --sparse 0"
+  with_items: [ ssd, md ]

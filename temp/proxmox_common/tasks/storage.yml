@@ -1,0 +1,80 @@
+---
+
+  - name: If test zpools then create files for the zpools
+    when: proxmox_test_zpools
+    with_items:
+      - ssd
+      - md
+    command: >
+      /usr/bin/fallocate -l "{{ proxmox_test_zpool_size }}" "/opt/{{ item }}"
+      creates="/opt/{{ item }}"
+
+  - name: If test zpools then make certain we have the zpools created
+    when: proxmox_test_zpools
+    with_items:
+      - ssd
+      - md
+    command: >
+      /sbin/zpool create "{{ item }}" "/opt/{{ item }}"
+      creates="/{{ item }}"
+
+# pvesm add zfspool md --pool md --content images,rootdir --sparse 0
+
+# The following items are probably not necessary for Proxmox systems.  Remove once we confirm.
+
+  # - name: Ensure that the main zfs location has been created and sharenfs is set properly
+  #   zfs:
+  #     name: "{{ item }}/nfs"
+  #     state: present   
+  #     sharenfs: 'rw=@192.168.41.0/24:@192.168.140.0/24:192.168.8.11:192.168.8.13:192.168.8.15'
+  #   with_items: "{{ zfs_zpools }}"
+
+  # - name: Ensure that the main zfs location has been created
+  #   zfs:
+  #     name: "{{ item }}/nfs"
+  #     state: present   
+  #     compression: lz4
+  #   with_items: "{{ zfs_zpools }}"
+
+  # - name: Ensure that we have the various zfs directories for sharing
+  #   zfs:
+  #     name: "{{ item[0] }}/nfs/{{ item[1] }}"
+  #     state: present
+  #   with_nested:
+  #     - "{{ zfs_zpools }}"
+  #     - "{{ zfs_proxmox }}"
+
+#  - name: Ensure that the libvirt subdirectory exists
+#    file:
+#      path: "/{{ item[0] }}/nfs/{{ item[1] }}/libvirt"
+#      state: directory
+#    with_nested:
+#      - "{{ zfs_zpools }}"
+#      - "{{ zfs_libvirt }}"
+
+#  - name: Ensure that the pools are defined
+#    virt_pool:
+#      name: "{{ item[0] }}-{{ item[1] }}"
+#      xml: '{{ lookup("template", "storage.xml.j2") }}'
+#      command: "define"
+#    with_nested:
+#      - "{{ zfs_zpools }}"
+#      - "{{ zfs_libvirt }}"
+
+#  - name: Ensure that the pools are active
+#    virt_pool:
+#      name: "{{ item[0] }}-{{ item[1] }}"
+#      state: active
+#    with_nested:
+#      - "{{ zfs_zpools }}"
+#      - "{{ zfs_libvirt }}"
+
+#  - name: Ensure that the pools are set to autostart
+#    virt_pool:
+#      name: "{{ item[0] }}-{{ item[1] }}"
+#      autostart: "yes"
+#    with_nested:
+#      - "{{ zfs_zpools }}"
+#      - "{{ zfs_libvirt }}"
+
+# vi:ts=2 ft=yaml

@@ -1,0 +1,94 @@
+---
+
+  - name: File server packages
+    tags:
+      - packages
+    apt: 
+      name:
+        - postfix
+        - samba
+        - sysstat
+        - nfs-kernel-server
+
+  - name: nfs-kernel-server defaults up to date
+    template:
+      src: "nfs-kernel-server.j2"
+      dest: "/etc/default/nfs-kernel-server"
+      owner: root
+      group: root
+      mode: 0644
+    notify:
+      - restart nfs-config
+      - restart nfs-kernel-server
+      - redo all zfs shares
+
+#  - name: zfs defaults up to date
+#    template:
+#      src: "zfs.j2"
+#      dest: "/etc/default/zfs"
+#      owner: root
+#      group: root
+#      mode: 0644
+
+#  - name: smb.conf up to date
+#    template:
+#      src: "smb.conf.j2"
+#      dest: "/etc/samba/smb.conf"
+#      owner: root
+#      group: root
+#      mode: 0644
+#    notify:
+#      - restart smbd
+#      - redo all zfs shares
+
+#  - name: Ensure that firewall is enabled
+#    tags:
+#      - firewall
+#    ufw: state=enabled
+      
+#  - name: Ensure that ssh is allowed
+#    tags:
+#      - firewall
+#    ufw: rule=allow port=22 proto=tcp
+  
+#  - name: Ensure that nfs is allowed through the firewall
+#    tags:
+#      - firewall
+#    ufw: rule=allow port="{{ item.port }}" 
+#    with_items:
+#      - { port: 2049, }
+#      - { port: 111, }
+#      - { port: 4004, }
+
+#  - name: Ensure that samba is allowed through the firewall
+#    tags:
+#      - firewall
+#    ufw: rule=allow port="{{ item.port }}" proto="{{ item.proto }}"
+#    with_items:
+#      - { port: 137, proto: "udp" }
+#      - { port: 138, proto: "udp" }
+#      - { port: 139, proto: "tcp" }
+#      - { port: 445, proto: "tcp" }
+
+#  - name: Ensure that full access is allowed from management systems
+#    tags:
+#      - firewall
+#    ufw: 
+#      rule: allow 
+#      src: "{{ item }}"
+#    with_items:
+#      - 192.168.8.16/32
+#      - 192.168.8.38/32
+
+#  - name: Ensure that cockpit is allowed through the firewall
+#    tags:
+#      - cockpit
+#      - firewall
+#    ufw: rule=allow port="{{ item.port }}" proto="{{ item.proto }}"
+#    with_items:
+#      - { port: 9090, proto: "tcp" }
+
+  #- name: Ensure that samba is running and enabled
+  #  service: name=samaba state=running enabled=yes
+
+# vi:ts=2 ft=yaml

@@ -1,0 +1,27 @@
+auto lo
+iface lo inet loopback
+
+iface {{ proxmox_net_mgmt_dev }} inet manual
+
+auto {{ proxmox_net_mgmt_bridge }}
+iface {{ proxmox_net_mgmt_bridge }} inet static
+	address {{ proxmox_net_mgmt_addr }}
+	netmask {{ proxmox_net_mgmt_netmask }}
+	gateway {{ proxmox_net_mgmt_gateway }}
+	bridge_ports {{ proxmox_net_mgmt_dev }}
+	bridge_stp off
+	bridge_fd 0
+
+{% if proxmox_enable_net_cluster %}
+auto {{ proxmox_net_cluster_dev }}
+iface {{ proxmox_net_cluster_dev }} static
+  address {{ proxmox_net_cluster_addr }}
+  netmask {{ proxmox_net_cluster_netmask }}
+{% endif %}
+
+{% for interface in proxmox_net_unused_dev %}
+iface {{ interface }} inet manual
+
+{% endfor %}
+
+source /etc/network/interfaces.d/*.cfg

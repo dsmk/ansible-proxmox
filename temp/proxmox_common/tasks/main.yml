@@ -1,0 +1,34 @@
+---
+  - include: core.yml
+
+  - include: storage.yml
+    tags:
+      - storage
+
+  - include: fileserver.yml
+    tags:
+      - fileserver
+
+  - include: openvswitch.yml
+    tags:
+      - openvswitch
+    when: proxmox_openvswitch
+
+  - include: isos.yml
+    tags:
+      - isos
+
+  - include: lxc.yml
+    tags:
+      - lxc
+
+# Cluster configuration
+  - include: cluster.yml
+    tags: cluster
+    
+  - include: master.yml
+    tags:
+      - master
+    when: inventory_hostname == proxmox_master
+    
+  #- include: common.yml
