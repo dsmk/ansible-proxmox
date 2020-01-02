@@ -1,0 +1,51 @@
+---
+# Basic tasks to convert a standard Debian 10 system into Proxmox 6.
+- name: debug
+  debug:
+    msg: "Building debian up"
+
+- name: Ensure that all packages are up to date
+  tags:
+    - pre
+    - patches
+  apt:
+    name: "*"
+    update_cache: yes
+    state: latest
+
+- name: Ensure that the hostname is set correctly
+  tags: pre
+  hostname:
+    name: "{{ inventory_hostname }}"
+- name: Ensure that /etc/hosts does not ahve a 127.0.0.1 entry
+  lineinfile:
+    state: absent
+    path: "/etc/hosts"
+    regexp: '^127\.0\.0\.1\s+localhost'
+
+- name: Ensure that we have the Proxmox repository key
+  tags: pre
+  apt_key:
+    url: "http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg"
+    state: present
+
+- name: Ensure that we have the Proxmox repository
+  tags: pre
+  apt_repository:
+    repo: "deb http://download.proxmox.com/debian/pve buster pve-no-subscription"
+    state: present
+
+- name: Ensure that the pve-enterprise repo does not exist
+  file:
+    path: "/etc/apt/sources.list.d/pve-enterprise.list"
+    state: absent
+
+- name: Ensure pve packages have been installed
+  register: pkgs_installed
+  apt: 
+    update_cache: yes
+    name: 
+      - proxmox-ve
+      - postfix
+      - open-iscsi
+      

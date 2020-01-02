@@ -1,2 +1,4 @@
 ---
 # tasks file for proxmox
+- include_tasks: debian.yml
+  when: proxmox_from_debian
