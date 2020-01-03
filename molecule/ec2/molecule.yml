@@ -6,10 +6,11 @@ driver:
 lint:
   name: yamllint
 platforms:
-  - name: instance
-    image: ami-a5b196c0
-    instance_type: t2.micro
-    vpc_subnet_id: subnet-6456fd1f
+  - name: master
+    image_owner: 136693071363
+    image_name: debian-10-amd64-* 
+    instance_type: t2.small
+    vpc_subnet_id: subnet-84c922f3
 provisioner:
   name: ansible
   lint:

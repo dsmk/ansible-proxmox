@@ -2,15 +2,16 @@
 dependency:
   name: galaxy
 driver:
-  name: ec2
+  name: docker
 lint:
   name: yamllint
 platforms:
   - name: master
-    image_owner: 136693071363
-    image_name: debian-10-amd64-* 
-    instance_type: t2.small
-    vpc_subnet_id: subnet-84c922f3
+    image: "geerlingguy/docker-debian10-ansible:latest"
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
     #image: debian:10
 provisioner:
   name: ansible
