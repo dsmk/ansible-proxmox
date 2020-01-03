@@ -17,7 +17,8 @@
   tags: pre
   hostname:
     name: "{{ inventory_hostname }}"
-- name: Ensure that /etc/hosts does not ahve a 127.0.0.1 entry
+- name: Ensure that /etc/hosts does not have a 127.0.0.1 entry
+  when: ansible_virtualization_type != "docker"
   lineinfile:
     state: absent
     path: "/etc/hosts"
@@ -48,4 +49,4 @@
       - proxmox-ve
       - postfix
       - open-iscsi
-      
+
