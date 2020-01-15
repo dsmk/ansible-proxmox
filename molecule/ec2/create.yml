@@ -34,6 +34,7 @@
         description: "{{ security_group_name }}"
         rules: "{{ security_group_rules }}"
         rules_egress: "{{ security_group_rules_egress }}"
+        vpc_id: vpc-e919cd8c
 
     - name: Test for presence of local keypair
       stat:
